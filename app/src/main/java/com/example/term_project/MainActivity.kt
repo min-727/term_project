@@ -1,73 +1,66 @@
 package com.example.term_project
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
-import com.prolificinteractive.materialcalendarview.CalendarDay
 import java.util.*
 
-class HomeActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var calendarView: MaterialCalendarView
-    private lateinit var btnSelectDate: Button
-    private lateinit var btnAnalyzeEmotion: Button
-    private lateinit var btnWriteToday: Button
-    private lateinit var btnDiaryList: Button
-    private lateinit var btnGoHome: Button
+    private lateinit var txtYear: TextView
+    private lateinit var txtMonth: TextView
+    private lateinit var txtMainEmotion: TextView
+    private lateinit var btnOption: Button
+    private lateinit var btnCalendar: Button
+    private lateinit var btnWriteDiary: Button
+    private lateinit var btnList: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         calendarView = findViewById(R.id.calendarView)
-        btnSelectDate = findViewById(R.id.btnSelectDate)
-        btnAnalyzeEmotion = findViewById(R.id.btnAnalyzeEmotion)
-        btnWriteToday = findViewById(R.id.btnWriteToday)
-        btnDiaryList = findViewById(R.id.btnDiaryList)
-        btnGoHome = findViewById(R.id.btnGoHome)
+        txtYear = findViewById(R.id.txtYear)
+        txtMonth = findViewById(R.id.txtMonth)
+        txtMainEmotion = findViewById(R.id.txtMainEmotion)
+        btnOption = findViewById(R.id.btnOption)
+        btnCalendar = findViewById(R.id.btnCalendar)
+        btnWriteDiary = findViewById(R.id.btnWriteDiary)
+        btnList = findViewById(R.id.btnList)
 
-        // 1. 초기 날짜 설정
-        val today = CalendarDay.today()
-        calendarView.setDateSelected(today, true)
-        updateDateButton(today)
 
-        // 2. 날짜가 선택되면 버튼 텍스트 변경
-        calendarView.setOnDateChangedListener { _, date, _ ->
-            updateDateButton(date)
+        val initialDate = Calendar.getInstance()
+        initialDate.time = calendarView.currentDate.date
+        updateYearMonth(initialDate)
+
+
+        calendarView.setOnMonthChangedListener { _, date ->
+            val cal = Calendar.getInstance()
+            cal.time = date.date
+            updateYearMonth(cal)
         }
 
-        // 3. 버튼 클릭 이벤트들
-        btnSelectDate.setOnClickListener {
-            // 선택된 날짜 다시 홈으로 반영 (이미 캘린더에 선택되므로 특별히 액션 X)
+        btnWriteDiary.setOnClickListener {
+            // 일기 쓰기 화면으로 이동
         }
 
-        btnWriteToday.setOnClickListener {
-            val intent = Intent(this, WriteDiaryActivity::class.java)
-            intent.putExtra("selectedDate", calendarView.selectedDate?.date.toString())
-            startActivity(intent)
+        btnCalendar.setOnClickListener {
+            // 현재 캘린더 유지 또는 새로고침
         }
 
-        btnDiaryList.setOnClickListener {
-            startActivity(Intent(this, DiaryListActivity::class.java))
-        }
-
-        btnAnalyzeEmotion.setOnClickListener {
-            startActivity(Intent(this, AnalyzeActivity::class.java))
-        }
-
-        btnGoHome.setOnClickListener {
-            // 홈에서 홈으로 가는 버튼이긴 하지만, 새로고침 기능으로 활용 가능
-            recreate()
+        btnList.setOnClickListener {
+            // 일기 목록 화면으로 이동
         }
     }
 
-    private fun updateDateButton(date: CalendarDay?) {
-        date?.let {
-            val year = it.year
-            val month = it.month + 1 // 0부터 시작하므로 +1
-            btnSelectDate.text = "${year}년 ${month}월"
-        }
+
+    private fun updateYearMonth(calendar: Calendar) {
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH) + 1
+        txtYear.text = "${year}年"
+        txtMonth.text = "${month}월"
     }
 }

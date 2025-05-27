@@ -1,81 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/homeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HomeActivity">
+    android:background="#DFF5D5"
+    tools:context=".MainActivity">
 
-    <!-- 1. 년도/월 선택 버튼 (상단 중앙) -->
+    <!-- 옵션 버튼: 오른쪽 상단 -->
     <Button
-        android:id="@+id/btnSelectDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="2025년 5월"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        android:id="@+id/btnOption"
+        android:layout_width="77dp"
+        android:layout_height="37dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
 
-    <!-- 2. 감정 분석 버튼 (오른쪽 상단) -->
-    <Button
-        android:id="@+id/btnAnalyzeEmotion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="감정 분석"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded_button_v2"
+        android:text="옵션" />
 
-    <!-- 3. 캘린더 뷰 (중앙) -->
+    <!-- 2025년 텍스트: 중앙 상단 -->
+    <TextView
+        android:id="@+id/txtYear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2025年"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        android:layout_centerHorizontal="true" />
+
+    <!-- 😊 + 1월 가로로 나란히 -->
+    <LinearLayout
+        android:id="@+id/emotionMonthLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/txtYear"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:id="@+id/txtMainEmotion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:text="😊"
+            android:textSize="32sp" />
+
+        <TextView
+            android:id="@+id/txtMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1월"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_vertical"/>
+    </LinearLayout>
+
+    <!-- 캘린더 -->
+
+    <!-- 하단 버튼들 -->
+
     <com.prolificinteractive.materialcalendarview.MaterialCalendarView
         android:id="@+id/calendarView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:mcv_showOtherDates="all"
+        android:layout_width="350dp"
+        android:layout_height="404dp"
+        android:layout_below="@id/emotionMonthLayout"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="39dp"
+        android:layout_marginEnd="30dp"
         app:mcv_selectionColor="@color/teal_200"
-        app:layout_constraintTop_toBottomOf="@id/btnSelectDate"
-        app:layout_constraintBottom_toTopOf="@id/btnWriteToday"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
+        app:mcv_showOtherDates="all" />
 
-    <!-- 4. 오늘 일기 쓰기 버튼 (가운데 하단) -->
-    <Button
-        android:id="@+id/btnWriteToday"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/bottomButtons"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="일기 쓰기"
-        android:background="@drawable/rounded_button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="80dp"/>
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"
+        android:weightSum="3">
 
-    <!-- 5. 홈(캘린더)로 이동 버튼 (왼쪽 하단) -->
-    <Button
-        android:id="@+id/btnGoHome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="홈"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="16dp"
-        android:layout_marginStart="16dp"/>
+        <Button
+            android:id="@+id/btnCalendar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.9"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/rounded_button_v2"
+            android:text="캘린더" />
 
-    <!-- 6. 일기 목록 보기 버튼 (오른쪽 하단) -->
-    <Button
-        android:id="@+id/btnDiaryList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="일기 목록"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"/>
+        <Button
+            android:id="@+id/btnWriteDiary"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight="0.8"
+            android:layout_marginHorizontal="50dp"
+            android:background="@drawable/rounded_button"
+            android:text="일기\n쓰기"
+            android:gravity="center"
+            android:textAlignment="center" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:id="@+id/btnList"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/rounded_button_v2"
+            android:text="목록" />
+    </LinearLayout>
+
+</RelativeLayout>
