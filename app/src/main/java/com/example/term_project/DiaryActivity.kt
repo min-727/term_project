@@ -1,4 +1,4 @@
-package com.example.diary_write
+package com.example.term_project
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,8 +18,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import android.widget.Toast
 
 
 // 이모티콘 선택 시 “원래 터치 피드백 배경”을 되돌리기 위해
@@ -42,11 +44,15 @@ class DiaryActivity : AppCompatActivity() {
     private lateinit var ivPhoto: ImageView
     private lateinit var btnMic: ImageButton
     private lateinit var llEmojis: LinearLayout
+    private lateinit var btnSub: ImageButton
 
     // 이미지 선택용 런처
     private lateinit var pickImageLauncher: ActivityResultLauncher<String>
     // 음성 인식용 런처
     private lateinit var speechLauncher: ActivityResultLauncher<Intent>
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private var selectedImageUri: Uri? = null
 
     // 선택된 이모티콘 ID 저장 변수
     private var selectedEmojiId: Int = -1
@@ -75,6 +81,7 @@ class DiaryActivity : AppCompatActivity() {
         ivPhoto    = findViewById(R.id.ivPhoto)
         btnMic     = findViewById(R.id.btnMic)
         llEmojis   = findViewById(R.id.llEmojis)
+        btnSub  = findViewById<ImageButton>(R.id.btnSub)
 
         // 1) 런타임에 위치 권한이 없으면 요청
         if (ContextCompat.checkSelfPermission(
@@ -96,7 +103,6 @@ class DiaryActivity : AppCompatActivity() {
 
         // (필요 시) Eval/Sub 버튼 바인딩
         // val btnEval = findViewById<ImageButton>(R.id.btnEval)
-        // val btnSub  = findViewById<ImageButton>(R.id.btnSub)
 
         // 1) 이미지 선택 로직 (기존 코드)
         pickImageLauncher = registerForActivityResult(
@@ -106,6 +112,7 @@ class DiaryActivity : AppCompatActivity() {
                 ivPhoto.setImageURI(it)
                 ivPhoto.visibility = View.VISIBLE
                 ivAddImage.visibility = View.GONE
+                selectedImageUri = it
             }
         }
         ivAddImage.setOnClickListener {
@@ -115,6 +122,7 @@ class DiaryActivity : AppCompatActivity() {
             ivPhoto.setImageDrawable(null)
             ivPhoto.visibility = View.GONE
             ivAddImage.visibility = View.VISIBLE
+            selectedImageUri = null
         }
 
         // 2) 음성 인식 로직 (기존 코드)
@@ -171,6 +179,11 @@ class DiaryActivity : AppCompatActivity() {
 
             }
         }
+
+        btnSub.setOnClickListener {
+            uploadDiaryToFirestore()
+        }
+
     }
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -193,6 +206,47 @@ class DiaryActivity : AppCompatActivity() {
 
     companion object {
         private const val PERMISSION_REQUEST_LOCATION = 100
+    }
+
+    private fun uploadDiaryToFirestore() {
+        // 1) 각 필드 값 가져오기
+        val titleText = etTitle.text.toString().trim()
+        val contentText = etContent.text.toString().trim()
+        val weatherText = etWeather.text.toString().trim()
+        val emojiId = selectedEmojiId
+
+        // 2) selectedImageUri를 문자열로 변환 (null인 경우는 빈 문자열 "")
+        val imageUriString = selectedImageUri?.toString() ?: ""
+
+        // 3) 필수 입력 체크
+        if (titleText.isEmpty()) {
+            etTitle.error = "제목을 입력하세요"
+            return
+        }
+        if (contentText.isEmpty()) {
+            etContent.error = "내용을 입력하세요"
+            return
+        }
+
+        // 4) 업로드할 데이터 맵 구성
+        val diaryMap = hashMapOf(
+            "title"   to titleText,
+            "text"    to contentText,
+            "date"    to currentDate,
+            "weather" to weatherText,
+            "emoji"   to emojiId,
+            "image"   to imageUriString
+        )
+
+        // 5) Firestore 콜렉션에 추가
+        firestore.collection("diaries")
+            .add(diaryMap)
+            .addOnSuccessListener { documentRef ->
+                Toast.makeText(this, "일기가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
+            }
     }
 
 }

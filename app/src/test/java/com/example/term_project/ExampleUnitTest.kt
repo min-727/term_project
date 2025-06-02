@@ -1,4 +1,4 @@
-package com.example.diary_write
+package com.example.term_project
 
 import org.junit.Test
 

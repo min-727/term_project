@@ -1,4 +1,4 @@
-package com.example.diary_write
+package com.example.term_project
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

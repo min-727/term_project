@@ -1,12 +1,9 @@
-package com.example.diary_write
+package com.example.term_project
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Looper
-import android.renderscript.RenderScript.Priority
-import android.widget.EditText
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.*
