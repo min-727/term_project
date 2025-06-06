@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -11,111 +12,216 @@
     <Button
         android:id="@+id/btnOption"
         android:layout_width="77dp"
-        android:layout_height="37dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-
-        android:layout_marginTop="16dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="60dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/rounded_button_v2"
-        android:text="옵션" />
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:text="@string/btn_option"
+        android:textColor="#000000"
+        app:backgroundTint="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 2025년 텍스트: 중앙 상단 -->
+    <!-- 2025년 텍스트 -->
     <TextView
         android:id="@+id/txtYear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="2025年"
-        android:textSize="24sp"
+        android:layout_marginTop="56dp"
+        android:text="@string/year_2025"
+        android:textColor="#000000"
+        android:textSize="35sp"
         android:textStyle="bold"
-        android:layout_marginTop="24dp"
-        android:layout_centerHorizontal="true" />
+        app:layout_constraintEnd_toStartOf="@id/btnOption"
+        app:layout_constraintHorizontal_bias="0.727"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 😊 + 1월 가로로 나란히 -->
+    <!-- 😊 + 1월 -->
+    <!-- 😊 + 1월 -->
     <LinearLayout
         android:id="@+id/emotionMonthLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:orientation="horizontal"
-        android:layout_below="@id/txtYear"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.431"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtYear">
 
-        <TextView
-            android:id="@+id/txtMainEmotion"
+        <!-- ✅ 이모지 버튼 -->
+        <Button
+            android:id="@+id/btnMainEmotion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="12dp"
-            android:text="😊"
-            android:textSize="32sp" />
+            android:background="@android:color/transparent"
+            android:text="@string/emoji_smile"
+            android:textSize="40sp"
+            android:textColor="#000000"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp" />
 
+        <!-- 월 텍스트 -->
         <TextView
             android:id="@+id/txtMonth"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="1월"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_gravity="center_vertical"/>
+            android:layout_gravity="center_vertical"
+            android:text="@string/month_january"
+            android:textSize="40sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- 캘린더 -->
 
-    <!-- 하단 버튼들 -->
-
-    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
-        android:id="@+id/calendarView"
-        android:layout_width="350dp"
-        android:layout_height="404dp"
-        android:layout_below="@id/emotionMonthLayout"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="39dp"
-        android:layout_marginEnd="30dp"
-        app:mcv_selectionColor="@color/teal_200"
-        app:mcv_showOtherDates="all" />
-
+    <!-- 요일 헤더 -->
     <LinearLayout
-        android:id="@+id/bottomButtons"
+        android:id="@+id/weekdaysHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:weightSum="7"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/emotionMonthLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="일"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="월"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="화"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="수"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="목"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="금"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="토"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2E7D32" />
+    </LinearLayout>
+
+    <!-- CalendarView -->
+    <com.kizitonwose.calendar.view.CalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="0dp"
+        android:layout_height="450dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/watch_cal"
+        app:cv_daySize="square"
+        app:cv_dayViewResource="@layout/day_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/weekdaysHeader" />
+
+    <!-- 하단 버튼 바 -->
+    <LinearLayout
+        android:id="@+id/bottomButtons"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="24dp"
-        android:weightSum="3">
+        android:weightSum="3"
+        style="?android:attr/buttonBarStyle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <Button
             android:id="@+id/btnCalendar"
+            android:textColor="#000000"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.9"
             android:layout_marginEnd="8dp"
             android:background="@drawable/rounded_button_v2"
-            android:text="캘린더" />
+            app:backgroundTint="@null"
+            android:text="@string/btn_calendar" />
 
         <Button
             android:id="@+id/btnWriteDiary"
+            android:background="@drawable/rounded_button"
             android:layout_width="0dp"
             android:layout_height="80dp"
             android:layout_weight="0.8"
+            android:textColor="#000000"
             android:layout_marginHorizontal="50dp"
-            android:background="@drawable/rounded_button"
-            android:text="일기\n쓰기"
+            android:text="@string/btn_write_diary"
             android:gravity="center"
+            app:backgroundTint="@null"
             android:textAlignment="center" />
 
         <Button
             android:id="@+id/btnList"
+            android:background="@drawable/rounded_button_v2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.8"
+            android:textColor="#000000"
             android:layout_marginStart="8dp"
-            android:background="@drawable/rounded_button_v2"
-            android:text="목록" />
+            app:backgroundTint="@null"
+            android:text="@string/btn_list" />
     </LinearLayout>
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
