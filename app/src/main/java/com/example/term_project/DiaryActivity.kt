@@ -96,7 +96,6 @@ class DiaryActivity : AppCompatActivity() {
         } else {
             // 2) 권한이 이미 허용되어 있으면 곧바로 WeatherApiHelper 호출
             WeatherApiHelper.fetchWeather(this) { weatherText ->
-                // 받아온 기온(또는 오류 메시지)을 etWeather에 세팅
                 etWeather.setText(weatherText)
             }
         }
@@ -145,7 +144,9 @@ class DiaryActivity : AppCompatActivity() {
                     RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                     RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
                 )
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "ko-KR")
+                putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "ko-KR")
                 putExtra(RecognizerIntent.EXTRA_PROMPT, "음성으로 일기 내용을 입력하세요")
             }
             try {
@@ -214,11 +215,9 @@ class DiaryActivity : AppCompatActivity() {
         val contentText = etContent.text.toString().trim()
         val weatherText = etWeather.text.toString().trim()
         val emojiId = selectedEmojiId
-
-        // 2) selectedImageUri를 문자열로 변환 (null인 경우는 빈 문자열 "")
         val imageUriString = selectedImageUri?.toString() ?: ""
 
-        // 3) 필수 입력 체크
+        // 2) 필수 입력 체크
         if (titleText.isEmpty()) {
             etTitle.error = "제목을 입력하세요"
             return
@@ -228,24 +227,36 @@ class DiaryActivity : AppCompatActivity() {
             return
         }
 
-        // 4) 업로드할 데이터 맵 구성
-        val diaryMap = hashMapOf(
-            "title"   to titleText,
-            "text"    to contentText,
-            "date"    to currentDate,
-            "weather" to weatherText,
-            "emoji"   to emojiId,
-            "image"   to imageUriString
-        )
-
-        // 5) Firestore 콜렉션에 추가
+        // 3) 같은 날짜 문서가 있는지 조회
         firestore.collection("diaries")
-            .add(diaryMap)
-            .addOnSuccessListener { documentRef ->
-                Toast.makeText(this, "일기가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+            .whereEqualTo("date", currentDate)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.isEmpty) {
+                    // 4) 비었으면 새로 추가
+                    val diaryMap = hashMapOf(
+                        "title"   to titleText,
+                        "text"    to contentText,
+                        "date"    to currentDate,
+                        "weather" to weatherText,
+                        "emoji"   to emojiId,
+                        "image"   to imageUriString
+                    )
+                    firestore.collection("diaries")
+                        .add(diaryMap)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "일기가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                } else {
+                    // 5) 이미 있으면 안내
+                    Toast.makeText(this, "오늘($currentDate) 작성된 일기가 이미 있습니다.", Toast.LENGTH_SHORT).show()
+                }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "일기 조회 실패: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 

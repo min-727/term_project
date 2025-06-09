@@ -1,229 +1,181 @@
 package com.example.term_project
-
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
-import androidx.core.app.ActivityCompat
+import android.os.Looper
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import okhttp3.*
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import org.json.JSONObject
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import com.google.android.gms.tasks.CancellationTokenSource
-import java.io.IOException
-import org.json.JSONException
-import org.json.JSONObject
-import org.json.JSONArray
-import com.google.android.gms.location.LocationRequest
-import java.net.URLEncoder
 
+/**
+ * 위치 기반 단기예보 조회 헬퍼
+ * 이제 SKY/PTY 값을 해석해 이모지로 반환합니다.
+ */
 object WeatherApiHelper {
-
-    // 공공데이터포털에서 발급받은 키(원본, 디코딩 상태) 그대로 입력하세요
-    private const val RAW_SERVICE_KEY = "Voz2HbYkOmKKf2s55dWhJDlwybCUXz9SiSm/eS3YD18JBC7odmBwOPUk5Uk63LauUIWv98mHm8g8j9kd6xodKg=="
+    private const val SERVICE_KEY = "hwxoYncUf7iua1/vLy8ypCv2X5mcGvupImVHQVR+pEUu60aWdJi4+G94mBw8x99/O9AU5fUd41+HOXmv4YqQeA=="
+    private const val BASE_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
 
     /**
-     * 위치 권한 확인 → 위치 조회 → 기상청 API 호출 → 결과 문자열(onResult) 반환
+     * 현 위치 기반 단기예보 조회
+     * 요청 URL과 원본 JSON을 로그로 출력
+     * callback으로 날씨 이모지를 전달
      */
-    fun fetchWeather(
-        context: Context,
-        onResult: (weatherText: String) -> Unit
-    ) {
-        // 1. 위치 권한 확인
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+    fun fetchWeather(activity: AppCompatActivity, callback: (String) -> Unit) {
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
         ) {
-            onResult("위치 권한이 없습니다")
+            callback("권한 필요")
             return
         }
 
-        val fusedClient: FusedLocationProviderClient =
-            LocationServices.getFusedLocationProviderClient(context)
-
-        // 2. 마지막 위치 시도
-        fusedClient.lastLocation
-            .addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    callWeatherApi(location.latitude, location.longitude, onResult)
-                } else {
-                    // 마지막 위치가 없는 경우 단발성 위치 요청
-                    requestOneTimeLocation(context, fusedClient, onResult)
-                }
-            }
-            .addOnFailureListener {
-                requestOneTimeLocation(context, fusedClient, onResult)
-            }
-    }
-
-    /**
-     * 마지막 위치 null 시 한 번만 정확한 위치 요청
-     */
-    private fun requestOneTimeLocation(
-        context: Context,
-        fusedClient: FusedLocationProviderClient,
-        onResult: (weatherText: String) -> Unit
-    ) {
-        // 권한 재확인
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            onResult("위치 권한이 없습니다")
-            return
+        val fusedClient = LocationServices.getFusedLocationProviderClient(activity)
+        val req = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 0
+            fastestInterval = 0
+            numUpdates = 1
         }
 
-        val cts = CancellationTokenSource()
-        fusedClient.getCurrentLocation(
-            LocationRequest.PRIORITY_HIGH_ACCURACY,
-            cts.token
-        ).addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                callWeatherApi(location.latitude, location.longitude, onResult)
-            } else {
-                onResult("위치 정보를 가져올 수 없습니다")
-            }
-        }.addOnFailureListener {
-            onResult("위치 요청 중 오류가 발생했습니다")
-        }
-    }
+        fusedClient.requestLocationUpdates(req, object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                fusedClient.removeLocationUpdates(this)
+                val loc = result.lastLocation
+                if (loc != null) {
+                    val (nx, ny) = GridConverter.latLngToGrid(loc.latitude, loc.longitude)
+                    val (baseDate, baseTime) = getBaseDateTime()
+                    val url = BASE_URL.toHttpUrlOrNull()!!.newBuilder().apply {
+                        addQueryParameter("serviceKey", SERVICE_KEY)
+                        addQueryParameter("numOfRows", "10")
+                        addQueryParameter("pageNo", "1")
+                        addQueryParameter("dataType", "JSON")
+                        addQueryParameter("base_date", baseDate)
+                        addQueryParameter("base_time", baseTime)
+                        addQueryParameter("nx", nx.toString())
+                        addQueryParameter("ny", ny.toString())
+                    }.build().toString()
+                    Log.d("WeatherApiHelper", "Request URL: $url")
 
-    /**
-     * 위경도 → 기상청 격자(nx, ny) 변환 후, 초단기실황(getUltraSrtNcst) API 호출
-     */
-    private fun callWeatherApi(
-        lat: Double,
-        lon: Double,
-        onResult: (weatherText: String) -> Unit
-    ) {
-        // 1) 위경도 → 격자(nx, ny) 변환
-        val (nx, ny) = latLonToGrid(lat, lon)
-
-        // 2) base_date 계산 (yyyyMMdd)
-        val now = Calendar.getInstance()
-        val dateFmt = SimpleDateFormat("yyyyMMdd", Locale.KOREAN)
-        val baseDate = dateFmt.format(now.time)
-
-        // 3) base_time 계산 (“HH00” 형식)
-        val hour = now.get(Calendar.HOUR_OF_DAY)      // 0~23
-        val minute = now.get(Calendar.MINUTE)         // 0~59
-
-        val baseTime = if (minute < 10) {
-            // 10분 이전이면 이전 시(00분)
-            if (hour == 0) {
-                now.add(Calendar.DATE, -1)            // 전날로 날짜 변경
-                "2300"
-            } else {
-                String.format("%02d00", hour - 1)     // 예: 14:05 → "1300"
-            }
-        } else {
-            // 10분 이상이면 현재 정시
-            String.format("%02d00", hour)             // 예: 14:12 → "1400"
-        }
-
-        // 4) 서비스 키 인코딩
-        val encodedKey = URLEncoder.encode(RAW_SERVICE_KEY, "UTF-8")
-
-        // 5) 요청 URL (HTTPS)
-        val url =
-            "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst" +
-                    "?serviceKey=$encodedKey" +
-                    "&numOfRows=10&pageNo=1" +
-                    "&dataType=JSON" +
-                    "&base_date=$baseDate" +
-                    "&base_time=$baseTime" +
-                    "&nx=$nx&ny=$ny"
-
-        // 6) 비동기 호출 (OkHttp + 코루틴)
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val client = OkHttpClient()
-                val request = Request.Builder().url(url).build()
-                client.newCall(request).execute().use { response ->
-                    val body = response.body?.string() ?: ""
-                    // 7) JSON 파싱 시도
-                    try {
-                        val itemsArray: JSONArray = JSONObject(body)
-                            .getJSONObject("response")
-                            .getJSONObject("body")
-                            .getJSONObject("items")
-                            .getJSONArray("item")
-
-                        // “category”가 “T1H”(기온)인 값을 찾아 추출
-                        var temperature: String? = null
-                        for (i in 0 until itemsArray.length()) {
-                            val item = itemsArray.getJSONObject(i)
-                            if (item.getString("category") == "T1H") {
-                                temperature = item.getString("obsrValue")
-                                break
+                    OkHttpClient().newCall(Request.Builder().url(url).build())
+                        .enqueue(object : Callback {
+                            override fun onFailure(call: Call, e: IOException) {
+                                Log.e("WeatherApiHelper", "Request failed", e)
+                                activity.runOnUiThread { callback("오류") }
                             }
-                        }
-                        val resultText = if (temperature != null) {
-                            "${temperature}℃"
-                        } else {
-                            "기온 정보를 가져올 수 없습니다"
-                        }
-                        onResult(resultText)
-                    } catch (je: JSONException) {
-                        // JSON 파싱 실패 → 응답이 XML일 가능성
-                        onResult("날씨 조회 실패(응답 형식 오류): $body")
-                    }
+
+                            override fun onResponse(call: Call, response: Response) {
+                                val json = response.body?.string()
+                                Log.d("WeatherApiHelper", "Raw weather response: $json")
+                                val emoji = parseWeatherEmoji(json)
+                                activity.runOnUiThread { callback(emoji) }
+                            }
+                        })
+                } else {
+                    activity.runOnUiThread { callback("위치 오류") }
                 }
-            } catch (e: IOException) {
-                e.printStackTrace()
-                onResult("날씨 조회 실패: ${e.message}")
-            } catch (e: Exception) {
-                e.printStackTrace()
-                onResult("날씨 조회 실패: ${e.localizedMessage}")
             }
-        }
+        }, Looper.getMainLooper())
     }
 
     /**
-     * 위경도(latitude, longitude) → 기상청 격자(nx, ny) 변환
-     * Lambert Conformal Conic Projection 공식 적용
+     * 발표 시각(0200,0500,...2300)+10분 기준으로 최근 base_date/base_time 계산
      */
-    private fun latLonToGrid(lat: Double, lon: Double): Pair<Int, Int> {
-        val RE = 6371.00877      // 지구 반경(km)
-        val GRID = 5.0          // 격자 간격(km)
-        val SLAT1 = 30.0        // 표준위도1
-        val SLAT2 = 60.0        // 표준위도2
-        val OLON = 126.0        // 기준점 경도
-        val OLAT = 38.0         // 기준점 위도
-        val XO = 210.0 / GRID   // 기준점 X 좌표
-        val YO = 675.0 / GRID   // 기준점 Y 좌표
+    private fun getBaseDateTime(): Pair<String, String> {
+        val now = Calendar.getInstance()
+        val announce = listOf(2,5,8,11,14,17,20,23)
+        val hour = now.get(Calendar.HOUR_OF_DAY)
+        val minute = now.get(Calendar.MINUTE)
+        val cal = now.clone() as Calendar
+        val baseHour = announce.lastOrNull { h -> (hour>h) || (hour==h && minute>=10) } ?: run {
+            cal.add(Calendar.DATE, -1)
+            23
+        }
+        cal.set(Calendar.HOUR_OF_DAY, baseHour)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        val df = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+        val tf = SimpleDateFormat("HHmm", Locale.getDefault())
+        return df.format(cal.time) to tf.format(cal.time)
+    }
 
-        val DEGRAD = Math.PI / 180.0
-        val re = RE / GRID
+    /**
+     * JSON에서 SKY/PTY 코드만 추출해 이모지로 매핑
+     */
+    private fun parseWeatherEmoji(json: String?): String {
+        if (json.isNullOrBlank()) return ""
+        return try {
+            val arr = JSONObject(json)
+                .getJSONObject("response").getJSONObject("body")
+                .getJSONObject("items").getJSONArray("item")
+            var sky: Int? = null
+            var pty: Int? = null
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                when (obj.getString("category")) {
+                    "SKY" -> sky = obj.getString("fcstValue").toIntOrNull()
+                    "PTY" -> pty = obj.getString("fcstValue").toIntOrNull()
+                }
+            }
+            when {
+                pty != null && pty > 0 -> "🌧️"
+                sky == 1 -> "☀️"
+                sky == 2 -> "🌤️"
+                sky == 3 -> "⛅️"
+                sky == 4 -> "☁️"
+                else -> ""
+            }
+        } catch (e: Exception) {
+            ""
+        }
+    }
+}
+
+/**
+ * 위경도 ↔︎ 기상청 격자 변환
+ */
+object GridConverter {
+    private const val RE = 6371.00877
+    private const val GRID = 5.0
+    private const val SLAT1 = 30.0
+    private const val SLAT2 = 60.0
+    private const val OLON = 126.0
+    private const val OLAT = 38.0
+    private const val XO = 210.0
+    private const val YO = 675.0
+    private val DEGRAD = Math.PI / 180.0
+    private val sn: Double
+    private val sf: Double
+    private val ro: Double
+    init {
         val slat1 = SLAT1 * DEGRAD
         val slat2 = SLAT2 * DEGRAD
         val olon = OLON * DEGRAD
         val olat = OLAT * DEGRAD
-
-        var sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) /
-                Math.tan(Math.PI * 0.25 + slat1 * 0.5)
-        sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn)
-        var sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5)
-        sf = Math.pow(sf, sn) * Math.cos(slat1) / sn
-        var ro = Math.tan(Math.PI * 0.25 + olat * 0.5)
-        ro = re * sf / Math.pow(ro, sn)
-
-        val ra = Math.tan(Math.PI * 0.25 + (lat * DEGRAD) * 0.5)
-        val raPow = re * sf / Math.pow(ra, sn)
-        var theta = lon * DEGRAD - olon
-        if (theta > Math.PI) theta -= 2.0 * Math.PI
-        if (theta < -Math.PI) theta += 2.0 * Math.PI
+        val re = RE/GRID
+        sn = Math.log(Math.cos(slat1)/Math.cos(slat2)) /
+                Math.log(Math.tan(Math.PI*0.25+slat2*0.5)/Math.tan(Math.PI*0.25+slat1*0.5))
+        sf = Math.pow(Math.tan(Math.PI*0.25+slat1*0.5), sn)*Math.cos(slat1)/sn
+        ro = re*sf/Math.pow(Math.tan(Math.PI*0.25+olat*0.5), sn)
+    }
+    fun latLngToGrid(lat: Double, lon: Double): Pair<Int, Int> {
+        val ra = Math.tan(Math.PI*0.25+lat*DEGRAD*0.5)
+        val raCalc = (RE/GRID)*sf/Math.pow(ra, sn)
+        var theta = lon*DEGRAD - (OLON*DEGRAD)
+        if (theta > Math.PI) theta -= 2*Math.PI
+        if (theta < -Math.PI) theta += 2*Math.PI
         theta *= sn
-
-        val x = (raPow * Math.sin(theta) + XO + 0.5).toInt()
-        val y = (ro - raPow * Math.cos(theta) + YO + 0.5).toInt()
-        return Pair(x, y)
+        val x = (raCalc*Math.sin(theta)+XO/GRID+1.5).toInt()
+        val y = (ro - raCalc*Math.cos(theta)+YO/GRID+1.5).toInt()
+        return x to y
     }
 }
+
+
