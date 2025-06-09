@@ -1,10 +1,10 @@
 package com.example.term_project
 
-import android.content.Intent
+import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
-import android.os.Bundle
 import android.net.Uri
+import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.View
@@ -12,31 +12,22 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.Manifest
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.term_project.WeatherApiHelper
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import android.widget.Toast
-
-
-// 이모티콘 선택 시 “원래 터치 피드백 배경”을 되돌리기 위해
-// theme 에 정의된 ?attr/selectableItemBackgroundBorderless 를 코드로 얻는 함수
-private fun AppCompatActivity.getBorderlessSelectableDrawable(): Drawable? {
-    val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
-    val ta = this.theme.obtainStyledAttributes(attrs)
-    val drawable = ta.getDrawable(0)
-    ta.recycle()
-    return drawable
-}
+import android.content.Intent
 
 class DiaryActivity : AppCompatActivity() {
 
-    // 뷰 참조 변수들
     private lateinit var etTitle: EditText
     private lateinit var etWeather: EditText
     private lateinit var etContent: EditText
@@ -46,67 +37,56 @@ class DiaryActivity : AppCompatActivity() {
     private lateinit var llEmojis: LinearLayout
     private lateinit var btnSub: ImageButton
 
-    // 이미지 선택용 런처
     private lateinit var pickImageLauncher: ActivityResultLauncher<String>
-    // 음성 인식용 런처
     private lateinit var speechLauncher: ActivityResultLauncher<Intent>
 
     private val firestore = FirebaseFirestore.getInstance()
     private var selectedImageUri: Uri? = null
-
-    // 선택된 이모티콘 ID 저장 변수
     private var selectedEmojiId: Int = -1
+
     private lateinit var currentDate: String
     private lateinit var currentTime: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val now = Date()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        currentDate = dateFormat.format(now)
-        currentTime = timeFormat.format(now)
-
-        Log.d("DiaryActivity", "현재 날짜: $currentDate, 현재 시간: $currentTime")
-
-
         setContentView(R.layout.activity_diary)
 
+        // 날짜/시간 포맷
+        val now = Date()
+        currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
+        currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(now)
+        Log.d("DiaryActivity", "현재 날짜: $currentDate, 현재 시간: $currentTime")
 
         // 뷰 바인딩
-        etTitle   = findViewById(R.id.etTitle)
+        etTitle = findViewById(R.id.etTitle)
         etWeather = findViewById(R.id.etWeather)
         etContent = findViewById(R.id.etContent)
         ivAddImage = findViewById(R.id.ivAddImage)
-        ivPhoto    = findViewById(R.id.ivPhoto)
-        btnMic     = findViewById(R.id.btnMic)
-        llEmojis   = findViewById(R.id.llEmojis)
-        btnSub  = findViewById<ImageButton>(R.id.btnSub)
+        ivPhoto = findViewById(R.id.ivPhoto)
+        btnMic = findViewById(R.id.btnMic)
+        llEmojis = findViewById(R.id.llEmojis)
+        btnSub = findViewById(R.id.btnSub)
 
-        // 1) 런타임에 위치 권한이 없으면 요청
+        // 날씨 조회 (코루틴)
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                this,
+            lifecycleScope.launch {
+                val emoji = WeatherApiHelper.fetchWeatherEmoji(this@DiaryActivity)
+                etWeather.setText(emoji)
+            }
+        } else {
+            requestPermissions(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 PERMISSION_REQUEST_LOCATION
             )
-        } else {
-            // 2) 권한이 이미 허용되어 있으면 곧바로 WeatherApiHelper 호출
-            WeatherApiHelper.fetchWeather(this) { weatherText ->
-                etWeather.setText(weatherText)
-            }
         }
 
-        // (필요 시) Eval/Sub 버튼 바인딩
-        // val btnEval = findViewById<ImageButton>(R.id.btnEval)
-
-        // 1) 이미지 선택 로직 (기존 코드)
+        // 이미지 선택
         pickImageLauncher = registerForActivityResult(
             ActivityResultContracts.GetContent()
-        ) { uri: Uri? ->
+        ) { uri ->
             uri?.let {
                 ivPhoto.setImageURI(it)
                 ivPhoto.visibility = View.VISIBLE
@@ -114,9 +94,7 @@ class DiaryActivity : AppCompatActivity() {
                 selectedImageUri = it
             }
         }
-        ivAddImage.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
+        ivAddImage.setOnClickListener { pickImageLauncher.launch("image/*") }
         ivPhoto.setOnClickListener {
             ivPhoto.setImageDrawable(null)
             ivPhoto.visibility = View.GONE
@@ -124,140 +102,102 @@ class DiaryActivity : AppCompatActivity() {
             selectedImageUri = null
         }
 
-        // 2) 음성 인식 로직 (기존 코드)
+        // 음성 인식
         speechLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK && result.data != null) {
-                val matches = result.data!!
-                    .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                if (!matches.isNullOrEmpty()) {
-                    val recognizedText = matches[0]
-                    etContent.append(recognizedText)
-                    etContent.append("\n")
+                val matches = result.data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                matches?.firstOrNull()?.let {
+                    etContent.append(it)
                 }
             }
         }
         btnMic.setOnClickListener {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-                )
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "ko-KR")
-                putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, "ko-KR")
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "음성으로 일기 내용을 입력하세요")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "음성으로 일기 입력")
             }
-            try {
-                speechLauncher.launch(intent)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            speechLauncher.launch(intent)
         }
 
-        // 3) 이모티콘 버튼 클릭 리스너 등록 및 선택 상태 처리
+        // 이모지 선택
         for (i in 1..5) {
-            val emojiBtnId = resources.getIdentifier("btnEmoji$i", "id", packageName)
-            val emojiBtn = findViewById<ImageButton>(emojiBtnId)
-
-            emojiBtn.setOnClickListener {
-                // 이전에 선택된 이모티콘이 있으면, 배경을 “원래 터치 피드백”으로 복원
-                if (selectedEmojiId != -1 && selectedEmojiId != emojiBtnId) {
-                    val prevBtn = findViewById<ImageButton>(selectedEmojiId)
-                    // 테마에서 제공하는 default ripple 배경을 가져와서 원상복구
-                    prevBtn.background = getBorderlessSelectableDrawable()
+            val id = resources.getIdentifier("btnEmoji$i", "id", packageName)
+            findViewById<ImageButton>(id).setOnClickListener { btn ->
+                if (selectedEmojiId != -1 && selectedEmojiId != id) {
+                    findViewById<ImageButton>(selectedEmojiId)
+                        .background = getBorderlessSelectableDrawable()
                 }
-
-                // 현재 클릭된 버튼에는 녹색 테두리 강조 적용
-                emojiBtn.background = ContextCompat.getDrawable(
-                    this,
-                    R.drawable.bg_emoji_selected
-                )
-
-                // 선택된 이모티콘 ID 저장
-                selectedEmojiId = emojiBtnId
-
+                btn.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
+                selectedEmojiId = id
             }
         }
 
-        btnSub.setOnClickListener {
-            uploadDiaryToFirestore()
-        }
-
+        btnSub.setOnClickListener { uploadDiaryToFirestore() }
     }
+
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_LOCATION) {
-            if (grantResults.isNotEmpty() &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED
-            ) {
-                WeatherApiHelper.fetchWeather(this) { weatherText ->
-                    etWeather.setText(weatherText)
-                }
-            } else {
-                etWeather.setText("위치 권한이 필요합니다")
+        if (requestCode == PERMISSION_REQUEST_LOCATION && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+            lifecycleScope.launch {
+                val emoji = WeatherApiHelper.fetchWeatherEmoji(this@DiaryActivity)
+                etWeather.setText(emoji)
             }
+        } else {
+            etWeather.setText("위치 권한 필요")
         }
-    }
-
-    companion object {
-        private const val PERMISSION_REQUEST_LOCATION = 100
     }
 
     private fun uploadDiaryToFirestore() {
-        // 1) 각 필드 값 가져오기
-        val titleText = etTitle.text.toString().trim()
-        val contentText = etContent.text.toString().trim()
-        val weatherText = etWeather.text.toString().trim()
-        val emojiId = selectedEmojiId
-        val imageUriString = selectedImageUri?.toString() ?: ""
+        val title = etTitle.text.toString().trim()
+        val content = etContent.text.toString().trim()
+        val weather = etWeather.text.toString().trim()
+        if (title.isEmpty()) { etTitle.error = "제목을 입력하세요"; return }
+        if (content.isEmpty()) { etContent.error = "내용을 입력하세요"; return }
 
-        // 2) 필수 입력 체크
-        if (titleText.isEmpty()) {
-            etTitle.error = "제목을 입력하세요"
-            return
-        }
-        if (contentText.isEmpty()) {
-            etContent.error = "내용을 입력하세요"
-            return
-        }
-
-        // 3) 같은 날짜 문서가 있는지 조회
         firestore.collection("diaries")
             .whereEqualTo("date", currentDate)
             .get()
-            .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
-                    // 4) 비었으면 새로 추가
-                    val diaryMap = hashMapOf(
-                        "title"   to titleText,
-                        "text"    to contentText,
-                        "date"    to currentDate,
-                        "weather" to weatherText,
-                        "emoji"   to emojiId,
-                        "image"   to imageUriString
+            .addOnSuccessListener { snap ->
+                if (snap.isEmpty) {
+                    val map = mapOf(
+                        "title" to title,
+                        "text" to content,
+                        "date" to currentDate,
+                        "weather" to weather,
+                        "emoji" to selectedEmojiId,
+                        "image" to (selectedImageUri?.toString() ?: "")
                     )
                     firestore.collection("diaries")
-                        .add(diaryMap)
+                        .add(map)
                         .addOnSuccessListener {
-                            Toast.makeText(this, "일기가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "일기 저장됨", Toast.LENGTH_SHORT).show()
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(this, "저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
                         }
                 } else {
-                    // 5) 이미 있으면 안내
-                    Toast.makeText(this, "오늘($currentDate) 작성된 일기가 이미 있습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "오늘($currentDate) 이미 작성됨", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "일기 조회 실패: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "조회 실패: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 
+    private fun AppCompatActivity.getBorderlessSelectableDrawable(): Drawable? {
+        val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+        val ta = theme.obtainStyledAttributes(attrs)
+        val dr = ta.getDrawable(0)
+        ta.recycle()
+        return dr
+    }
+
+    companion object {
+        private const val PERMISSION_REQUEST_LOCATION = 100
+    }
 }
