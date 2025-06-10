@@ -1,0 +1,5 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#A5D6A7" /> <!-- 연한 초록 계열 -->
+    <corners android:radius="36dp" /> <!-- 완전한 원형에 가까운 둥근 처리 -->
+</shape>

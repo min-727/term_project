@@ -1,6 +1,12 @@
 pluginManagement {
     repositories {
-        google()
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -16,8 +22,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // jcenter() 필요시 아래 주석 해제
-        // jcenter()
     }
 }
 

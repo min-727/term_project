@@ -10,5 +10,6 @@
     <string name="desc_write_diary">오늘의 일기를 작성하는 버튼</string>
     <string name="year_format">%d년</string>
     <string name="month_format">%d월</string>
-    <string name="app_name">Term Project</string>
+    <string name="app_name">diary_write</string>
+
 </resources>

@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.term_project"
-        minSdk = 26
+        minSdk = 34
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -43,8 +43,11 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
-    implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.google.android.gms:play-services-location:18.0.0")
+    implementation(platform("com.google.firebase:firebase-bom:29.3.1"))
+    implementation("com.google.firebase:firebase-firestore-ktx:21.2.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

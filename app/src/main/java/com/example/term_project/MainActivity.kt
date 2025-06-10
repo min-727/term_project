@@ -1,6 +1,7 @@
 package com.example.term_project
 
 import android.os.Bundle
+import android.content.Intent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         btnCalendar = findViewById(R.id.btnCalendar)
         btnWriteDiary = findViewById(R.id.btnWriteDiary)
         btnList = findViewById(R.id.btnList)
-
+        val intent = Intent(this, DiaryActivity::class.java)
         calendarView.dayViewResource = R.layout.day_view
 
 // 🔁 dayBinder 수정
@@ -115,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
         btnWriteDiary.setOnClickListener {
             // 일기 쓰기 화면으로 이동
+            startActivity(intent)
         }
 
         btnList.setOnClickListener {
@@ -192,3 +194,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+
+
+
