@@ -36,7 +36,7 @@
             android:id="@+id/btnSortDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="날짜순"
+            android:text="최근순"
             android:layout_margin="4dp"
             android:backgroundTint="#8BC34A"
             android:textColor="#FFFFFF" />

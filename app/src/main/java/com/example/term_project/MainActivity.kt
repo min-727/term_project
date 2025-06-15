@@ -78,6 +78,12 @@ class MainActivity : AppCompatActivity() {
                         container.emojiView.visibility = View.GONE
                         container.textView.visibility = View.VISIBLE
                     }
+                    // 일기 뷰어 넘어가는 리스너 추가
+                    container.view.setOnClickListener {
+                        val intent = Intent(this@MainActivity, DiaryViewActivity::class.java)
+                        intent.putExtra("date", data.date.toString())
+                        startActivity(intent)
+                    }
                 } else {
                     container.textView.visibility = View.INVISIBLE
                     container.emojiView.visibility = View.GONE
@@ -126,6 +132,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 🎯 Firestore에서 emoji 데이터 불러오기
+        fetchEmojiData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 화면으로 돌아올 때마다 Firestore에서 최신 이모지 데이터를 다시 불러와 달력을 갱신
         fetchEmojiData()
     }
 

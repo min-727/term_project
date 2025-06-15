@@ -26,7 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.content.Intent
 
-class DiaryActivity : AppCompatActivity() {
+class DiaryViewActivity : AppCompatActivity() {
 
     private lateinit var etTitle: EditText
     private lateinit var etWeather: EditText
@@ -51,11 +51,6 @@ class DiaryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_diary)
 
-        // 날짜/시간 포맷
-        val now = Date()
-        currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
-        currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(now)
-        Log.d("DiaryActivity", "현재 날짜: $currentDate, 현재 시간: $currentTime")
 
         // 뷰 바인딩
         etTitle = findViewById(R.id.etTitle)
@@ -67,21 +62,31 @@ class DiaryActivity : AppCompatActivity() {
         llEmojis = findViewById(R.id.llEmojis)
         btnSub = findViewById(R.id.btnSub)
 
-        // 날씨 조회 (코루틴)
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            lifecycleScope.launch {
-                val emoji = WeatherApiHelper.fetchWeatherEmoji(this@DiaryActivity)
-                etWeather.setText(emoji)
+        // 전달된 날짜
+        val dateStr = intent.getStringExtra("date") ?: return
+        // 2) currentDate를 dateStr로 설정
+        currentDate = dateStr
+
+        // Firestore에서 날짜로 쿼리
+        firestore.collection("diaries")
+            .whereEqualTo("date", dateStr)
+            .get()
+            .addOnSuccessListener { snaps ->
+                if (!snaps.isEmpty) {
+                    val doc = snaps.documents[0]
+                    etTitle.setText(doc.getString("title"))
+                    etContent.setText(doc.getString("text"))
+                    etWeather.setText(doc.getString("weather"))
+                    val emojiValue = (doc.getLong("emoji") ?: 3).toInt()
+                    val btnId = resources.getIdentifier("btnEmoji$emojiValue", "id", packageName)
+                    if (1 <= emojiValue && emojiValue <= 5) {
+                        selectedEmojiId = btnId
+                        val btn = findViewById<ImageButton>(btnId)
+                        btn.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
+                    }
+                }
             }
-        } else {
-            requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSION_REQUEST_LOCATION
-            )
-        }
+
 
         // 이미지 선택
         pickImageLauncher = registerForActivityResult(
@@ -138,19 +143,6 @@ class DiaryActivity : AppCompatActivity() {
         btnSub.setOnClickListener { uploadDiaryToFirestore() }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_LOCATION && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-            lifecycleScope.launch {
-                val emoji = WeatherApiHelper.fetchWeatherEmoji(this@DiaryActivity)
-                etWeather.setText(emoji)
-            }
-        } else {
-            etWeather.setText("위치 권한 필요")
-        }
-    }
 
     private fun uploadDiaryToFirestore() {
         val title = etTitle.text.toString().trim()
@@ -185,11 +177,31 @@ class DiaryActivity : AppCompatActivity() {
                             Toast.makeText(this, "저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
                         }
                 } else {
-                    Toast.makeText(this, "오늘($currentDate) 이미 작성됨", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, MainActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    startActivity(intent)
-                    finish()
+                    // (2) 중복인 경우: 기존 문서 전부 삭제
+                    for (docSnap in snap.documents) {
+                        docSnap.reference.delete()
+                    }
+                    val map = mapOf(
+                        "title" to title,
+                        "text" to content,
+                        "date" to currentDate,
+                        "weather" to weather,
+                        "emoji" to selectedEmojiId-2131230824,
+                        "image" to (selectedImageUri?.toString() ?: "")
+                    )
+                    // 그리고 새로 추가
+                    firestore.collection("diaries")
+                        .add(map)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "기존 일기를 덮어쓰고 저장됨", Toast.LENGTH_SHORT).show()
+                            val intent = Intent(this, MainActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            startActivity(intent)
+                            finish()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "덮어쓰기 실패: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
                 }
             }
             .addOnFailureListener { e ->

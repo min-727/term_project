@@ -35,6 +35,10 @@
             android:exported="false" />
         <activity android:name=".DiaryListActivity">
         </activity>
+        <activity
+            android:name=".DiaryViewActivity"
+            android:windowSoftInputMode="adjustNothing"
+            android:exported="false" />
 
     </application>
 
