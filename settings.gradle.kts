@@ -10,14 +10,20 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        id("com.android.application") version "8.4.2"
+        id("com.google.gms.google-services") version "4.4.2"
+        id("org.jetbrains.kotlin.android") version "1.9.0"
+    }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
     }
 }
 
-rootProject.name = "diary_write"
+rootProject.name = "term_project"
 include(":app")

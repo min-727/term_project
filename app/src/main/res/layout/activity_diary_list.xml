@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#DFF5D5"> <!-- 연한 녹색 배경 -->
+
+    <!-- 상단 버튼 그룹: 달력, 제목순, 날짜순 (가로 중앙 정렬) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="12dp">
+
+        <Button
+            android:id="@+id/btnCalendar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="달력"
+            android:layout_margin="4dp"
+            android:backgroundTint="#8BC34A"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnSortTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="제목순"
+            android:layout_margin="4dp"
+            android:backgroundTint="#8BC34A"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnSortDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="날짜순"
+            android:layout_margin="4dp"
+            android:backgroundTint="#8BC34A"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+    <TextView
+        android:id="@+id/tvYearMonth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:textSize="22sp"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp"
+        android:text="2025년 6월" />
+
+    <!-- 일기 목록 RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDiaries"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>

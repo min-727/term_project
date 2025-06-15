@@ -176,12 +176,20 @@ class DiaryActivity : AppCompatActivity() {
                         .add(map)
                         .addOnSuccessListener {
                             Toast.makeText(this, "일기 저장됨", Toast.LENGTH_SHORT).show()
+                            val intent = Intent(this, MainActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            startActivity(intent)
+                            finish()
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(this, "저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
                         }
                 } else {
                     Toast.makeText(this, "오늘($currentDate) 이미 작성됨", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    startActivity(intent)
+                    finish()
                 }
             }
             .addOnFailureListener { e ->
