@@ -18,6 +18,7 @@ import java.time.YearMonth
 import java.time.LocalDate
 import java.util.*
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var calendarView: CalendarView
@@ -44,7 +45,6 @@ class MainActivity : AppCompatActivity() {
         btnCalendar = findViewById(R.id.btnCalendar)
         btnWriteDiary = findViewById(R.id.btnWriteDiary)
         btnList = findViewById(R.id.btnList)
-        val intent = Intent(this, DiaryActivity::class.java)
         calendarView.dayViewResource = R.layout.day_view
 
 // 🔁 dayBinder 수정
@@ -114,8 +114,14 @@ class MainActivity : AppCompatActivity() {
             calendarView.scrollToMonth(currentYearMonth)
         }
 
+        btnOption.setOnClickListener {
+            val intent = Intent(this, AnalysisActivity::class.java)
+            startActivity(intent)
+        }
+
         btnWriteDiary.setOnClickListener {
             // 일기 쓰기 화면으로 이동
+            val intent = Intent(this, DiaryActivity::class.java)
             startActivity(intent)
         }
 
