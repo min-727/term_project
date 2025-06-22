@@ -1,0 +1,18 @@
+<!-- res/layout/dialog_year_month_analysis.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <NumberPicker
+        android:id="@+id/pickerYear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <NumberPicker
+        android:id="@+id/pickerMonth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"/>
+</LinearLayout>

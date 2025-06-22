@@ -18,6 +18,7 @@ import java.time.YearMonth
 import java.time.LocalDate
 import java.util.*
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var calendarView: CalendarView
@@ -44,7 +45,6 @@ class MainActivity : AppCompatActivity() {
         btnCalendar = findViewById(R.id.btnCalendar)
         btnWriteDiary = findViewById(R.id.btnWriteDiary)
         btnList = findViewById(R.id.btnList)
-        val intent = Intent(this, DiaryActivity::class.java)
         calendarView.dayViewResource = R.layout.day_view
 
 // 🔁 dayBinder 수정
@@ -78,7 +78,6 @@ class MainActivity : AppCompatActivity() {
                         container.emojiView.visibility = View.GONE
                         container.textView.visibility = View.VISIBLE
                     }
-                    // 일기 뷰어 넘어가는 리스너 추가
                     container.view.setOnClickListener {
                         val intent = Intent(this@MainActivity, DiaryViewActivity::class.java)
                         intent.putExtra("date", data.date.toString())
@@ -120,21 +119,26 @@ class MainActivity : AppCompatActivity() {
             calendarView.scrollToMonth(currentYearMonth)
         }
 
+        btnOption.setOnClickListener {
+            val intent = Intent(this, AnalysisActivity::class.java)
+            startActivity(intent)
+        }
+
         btnWriteDiary.setOnClickListener {
             // 일기 쓰기 화면으로 이동
+            val intent = Intent(this, DiaryActivity::class.java)
             startActivity(intent)
         }
 
         btnList.setOnClickListener {
             // 일기 목록 화면으로 이동
-            val intentList = Intent(this, DiaryListActivity::class.java)
-            startActivity(intentList)
+            val intent = Intent(this, DiaryListActivity::class.java)
+            startActivity(intent)
         }
 
         // 🎯 Firestore에서 emoji 데이터 불러오기
         fetchEmojiData()
     }
-
     override fun onResume() {
         super.onResume()
         // 화면으로 돌아올 때마다 Firestore에서 최신 이모지 데이터를 다시 불러와 달력을 갱신

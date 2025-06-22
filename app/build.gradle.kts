@@ -48,6 +48,13 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:18.0.0")
     implementation(platform("com.google.firebase:firebase-bom:29.3.1"))
     implementation("com.google.firebase:firebase-firestore-ktx:21.2.1")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("org.tensorflow:tensorflow-lite:2.13.0")
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.13.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

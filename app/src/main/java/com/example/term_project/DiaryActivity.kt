@@ -25,6 +25,10 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import android.content.Intent
+import org.tensorflow.lite.Interpreter
+import java.io.FileInputStream
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 
 class DiaryActivity : AppCompatActivity() {
 
@@ -36,13 +40,16 @@ class DiaryActivity : AppCompatActivity() {
     private lateinit var btnMic: ImageButton
     private lateinit var llEmojis: LinearLayout
     private lateinit var btnSub: ImageButton
+    private lateinit var tflite: Interpreter
+    private lateinit var btnEval: ImageButton
 
     private lateinit var pickImageLauncher: ActivityResultLauncher<String>
     private lateinit var speechLauncher: ActivityResultLauncher<Intent>
 
     private val firestore = FirebaseFirestore.getInstance()
     private var selectedImageUri: Uri? = null
-    private var selectedEmojiId: Int = 2131230829
+    private var selectedEmojiId: Int = 2131230828
+    private var lastSelectedButton: ImageButton? = null
 
     private lateinit var currentDate: String
     private lateinit var currentTime: String
@@ -66,6 +73,7 @@ class DiaryActivity : AppCompatActivity() {
         btnMic = findViewById(R.id.btnMic)
         llEmojis = findViewById(R.id.llEmojis)
         btnSub = findViewById(R.id.btnSub)
+        btnEval = findViewById(R.id.btnEval)
 
         // 날씨 조회 (코루틴)
         if (ContextCompat.checkSelfPermission(
@@ -122,20 +130,69 @@ class DiaryActivity : AppCompatActivity() {
             speechLauncher.launch(intent)
         }
 
+        btnSub.setOnClickListener { uploadDiaryToFirestore() }
+
         // 이모지 선택
         for (i in 1..5) {
             val id = resources.getIdentifier("btnEmoji$i", "id", packageName)
-            findViewById<ImageButton>(id).setOnClickListener { btn ->
-                if (selectedEmojiId != -1 && selectedEmojiId != id) {
-                    findViewById<ImageButton>(selectedEmojiId)
-                        .background = getBorderlessSelectableDrawable()
-                }
-                btn.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
+            val button = findViewById<ImageButton>(id)
+            button.setOnClickListener {
+                // 기존 배경 제거
+                lastSelectedButton?.background = getBorderlessSelectableDrawable()
+
+                // 새 배경 적용
+                button.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
+                lastSelectedButton = button
                 selectedEmojiId = id
             }
         }
 
-        btnSub.setOnClickListener { uploadDiaryToFirestore() }
+// TFLite 모델 로딩
+        val model = loadModelFile("text2emoji_converter.tflite")
+        val options = Interpreter.Options()
+        tflite = Interpreter(model, options)
+
+// TFLite 분석 버튼
+        btnEval.setOnClickListener {
+            val inputText = etContent.text.toString().trim()
+            if (inputText.isNotEmpty()) {
+                val input = arrayOf(arrayOf(inputText))
+                val output = Array(1) { FloatArray(1) }
+                tflite.run(input, output)
+
+                val score = output[0][0]
+                val newEmojiId = when {
+                    score < 0.2f -> 2131230828
+                    score < 0.4f -> 2131230829
+                    score < 0.6f -> 2131230830
+                    score < 0.8f -> 2131230831
+                    else         -> 2131230832
+                }
+
+                // 기존 선택 배경 제거
+                lastSelectedButton?.background = getBorderlessSelectableDrawable()
+
+                // 새 선택 배경 적용
+                val newButton = findViewById<ImageButton>(newEmojiId)
+                newButton.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
+
+                // 상태 갱신
+                lastSelectedButton = newButton
+                selectedEmojiId = newEmojiId
+
+                Toast.makeText(this, "감정 점수: $score", Toast.LENGTH_SHORT).show()
+                Log.d("EvalInput", "입력 문장: $inputText")
+            }
+        }
+    }
+
+    private fun loadModelFile(modelFilename: String): MappedByteBuffer {
+        val fileDescriptor = assets.openFd(modelFilename)
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        val fileChannel = inputStream.channel
+        val startOffset = fileDescriptor.startOffset
+        val declaredLength = fileDescriptor.declaredLength
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
     override fun onRequestPermissionsResult(
@@ -169,7 +226,7 @@ class DiaryActivity : AppCompatActivity() {
                         "text" to content,
                         "date" to currentDate,
                         "weather" to weather,
-                        "emoji" to selectedEmojiId-2131230824,
+                        "emoji" to selectedEmojiId-2131230827,
                         "image" to (selectedImageUri?.toString() ?: "")
                     )
                     firestore.collection("diaries")
