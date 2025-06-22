@@ -20,8 +20,8 @@
             android:layout_height="wrap_content"
             android:text="달력"
             android:layout_margin="4dp"
-            android:backgroundTint="#8BC34A"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:backgroundTint="#8BC34A" />
 
         <Button
             android:id="@+id/btnSortTitle"
@@ -29,8 +29,8 @@
             android:layout_height="wrap_content"
             android:text="제목순"
             android:layout_margin="4dp"
-            android:backgroundTint="#8BC34A"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:backgroundTint="#8BC34A" />
 
         <Button
             android:id="@+id/btnSortDate"
@@ -38,8 +38,8 @@
             android:layout_height="wrap_content"
             android:text="최근순"
             android:layout_margin="4dp"
-            android:backgroundTint="#8BC34A"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:backgroundTint="#8BC34A" />
 
     </LinearLayout>
     <TextView

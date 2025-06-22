@@ -1,7 +1,7 @@
 <resources>
     <string name="btn_option">옵션</string>
     <string name="btn_calendar">캘린더</string>
-    <string name="btn_write_diary">일기\n쓰기</string>
+    <string name="btn_write_diary">쓰기</string>
     <string name="btn_list">목록</string>
     <string name="year_2025">2025년</string>
     <string name="month_january">1월</string>

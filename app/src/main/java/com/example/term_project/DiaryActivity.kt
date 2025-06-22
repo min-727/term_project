@@ -135,57 +135,45 @@ class DiaryActivity : AppCompatActivity() {
         // 이모지 선택
         for (i in 1..5) {
             val id = resources.getIdentifier("btnEmoji$i", "id", packageName)
-            val button = findViewById<ImageButton>(id)
-            button.setOnClickListener {
-                // 기존 배경 제거
-                lastSelectedButton?.background = getBorderlessSelectableDrawable()
-
-                // 새 배경 적용
-                button.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
-                lastSelectedButton = button
+            findViewById<ImageButton>(id).setOnClickListener { btn ->
+                if (selectedEmojiId != -1 && selectedEmojiId != id) {
+                    findViewById<ImageButton>(selectedEmojiId)
+                        .background = getBorderlessSelectableDrawable()
+                }
+                btn.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
                 selectedEmojiId = id
             }
         }
 
-// TFLite 모델 로딩
         val model = loadModelFile("text2emoji_converter.tflite")
         val options = Interpreter.Options()
         tflite = Interpreter(model, options)
 
-// TFLite 분석 버튼
+        //AI 감정 평가
         btnEval.setOnClickListener {
             val inputText = etContent.text.toString().trim()
             if (inputText.isNotEmpty()) {
-                val input = arrayOf(arrayOf(inputText))
-                val output = Array(1) { FloatArray(1) }
+                val input = arrayOf(arrayOf(inputText))  // [1][1] 문자열 배열
+                val output = Array(1) { FloatArray(1) }   // [1][1] 출력 버퍼
+
                 tflite.run(input, output)
 
                 val score = output[0][0]
-                val newEmojiId = when {
+                selectedEmojiId = when {
                     score < 0.2f -> 2131230828
                     score < 0.4f -> 2131230829
                     score < 0.6f -> 2131230830
                     score < 0.8f -> 2131230831
                     else         -> 2131230832
                 }
-
-                // 기존 선택 배경 제거
-                lastSelectedButton?.background = getBorderlessSelectableDrawable()
-
-                // 새 선택 배경 적용
-                val newButton = findViewById<ImageButton>(newEmojiId)
-                newButton.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
-
-                // 상태 갱신
-                lastSelectedButton = newButton
-                selectedEmojiId = newEmojiId
+                val btn = findViewById<ImageButton>(selectedEmojiId)
+                btn.background = ContextCompat.getDrawable(this, R.drawable.bg_emoji_selected)
 
                 Toast.makeText(this, "감정 점수: $score", Toast.LENGTH_SHORT).show()
                 Log.d("EvalInput", "입력 문장: $inputText")
             }
         }
     }
-
     private fun loadModelFile(modelFilename: String): MappedByteBuffer {
         val fileDescriptor = assets.openFd(modelFilename)
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)

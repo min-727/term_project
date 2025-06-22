@@ -188,7 +188,7 @@
         android:id="@+id/bottomButtons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         android:orientation="horizontal"
         android:gravity="center"
         android:weightSum="3"
@@ -199,38 +199,40 @@
 
         <Button
             android:id="@+id/btnCalendar"
-            android:textColor="#000000"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.9"
-            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
             android:background="@drawable/rounded_button_v2"
-            app:backgroundTint="@null"
-            android:text="@string/btn_calendar" />
+            android:text="@string/btn_calendar"
+            android:textColor="#000000"
+            android:textStyle="bold"
+            app:backgroundTint="@null" />
 
         <Button
             android:id="@+id/btnWriteDiary"
-            android:background="@drawable/rounded_button"
             android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_weight="0.8"
-            android:textColor="#000000"
-            android:layout_marginHorizontal="50dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
+            android:background="@drawable/rounded_button_v2"
             android:text="@string/btn_write_diary"
+            android:textColor="#000000"
+            android:textStyle="bold"
             android:gravity="center"
-            app:backgroundTint="@null"
-            android:textAlignment="center" />
+            app:backgroundTint="@null" />
 
         <Button
             android:id="@+id/btnList"
-            android:background="@drawable/rounded_button_v2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
+            android:background="@drawable/rounded_button_v2"
+            android:text="@string/btn_list"
             android:textColor="#000000"
-            android:layout_marginStart="8dp"
-            app:backgroundTint="@null"
-            android:text="@string/btn_list" />
+            android:textStyle="bold"
+            app:backgroundTint="@null" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

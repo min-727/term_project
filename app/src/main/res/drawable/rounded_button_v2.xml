@@ -4,7 +4,7 @@
 
     <solid android:color="#8BC34A"/>  <!-- 버튼 배경색 -->
 
-    <corners android:radius="30dp"/>  <!-- 완전 둥근 모서리 (50dp 정도면 충분) -->
+    <corners android:radius="10dp"/>  <!-- 완전 둥근 모서리 (50dp 정도면 충분) -->
 
     <padding
         android:left="16dp"

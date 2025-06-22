@@ -13,6 +13,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+//리사이틀러 뷰 액티비티
 class DiaryListActivity : AppCompatActivity() {
 
     private val db = FirebaseFirestore.getInstance()

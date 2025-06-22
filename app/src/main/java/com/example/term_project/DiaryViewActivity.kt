@@ -251,7 +251,7 @@ class DiaryViewActivity : AppCompatActivity() {
                     firestore.collection("diaries")
                         .add(map)
                         .addOnSuccessListener {
-                            Toast.makeText(this, "기존 일기를 덮어쓰고 저장됨${selectedEmojiId}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "기존 일기를 덮어쓰고 저장됨", Toast.LENGTH_SHORT).show()
                             val intent = Intent(this, MainActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                             startActivity(intent)
