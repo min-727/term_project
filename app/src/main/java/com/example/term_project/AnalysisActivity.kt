@@ -1,6 +1,7 @@
 package com.example.term_project
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.view.View
 import android.graphics.Color
 import android.os.Bundle
@@ -57,6 +58,22 @@ class AnalysisActivity : AppCompatActivity() {
         barChart = findViewById(R.id.barChart)
         btnRecommend = findViewById(R.id.btnRecommendBooks)
         bookCoverLayout = findViewById(R.id.bookCoverLayout)
+        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
+        val btnDiary = findViewById<Button>(R.id.btnWriteDiary)
+        val btnList = findViewById<Button>(R.id.btnList)
+
+        btnCalendar.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
+        btnDiary.setOnClickListener {
+            startActivity(Intent(this, DiaryActivity::class.java))
+        }
+
+        btnList.setOnClickListener {
+            startActivity(Intent(this, DiaryListActivity::class.java))
+        }
+
         val now = Calendar.getInstance()
         val year = now.get(Calendar.YEAR)
         val month = now.get(Calendar.MONTH) + 1

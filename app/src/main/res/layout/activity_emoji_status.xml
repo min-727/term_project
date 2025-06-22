@@ -1,52 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/layoutRoot"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#DFF5D5"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnPickMonth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#A5D6A7"
-        android:text="연도/월 선택"
-        android:textColor="#000000"
-        app:backgroundTint="@null" />
-
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/barChart"
-        android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:background="@drawable/rounded_background"
-        android:layout_marginTop="16dp" />
-
-    <Button
-        android:id="@+id/btnRecommendBooks"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#000000"
-        android:background="#A5D6A7"
-        app:backgroundTint="@null"
-        android:text="책 추천 받기" />
-
-    <HorizontalScrollView
-        android:id="@+id/bookScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:visibility="gone"
-        android:scrollbars="none">
-
+    <!-- 메인 콘텐츠 화면 -->
     <LinearLayout
-        android:id="@+id/bookCoverLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"/>
-</HorizontalScrollView>
+        android:id="@+id/layoutRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#DFF5D5"
+        android:padding="16dp">
 
-</LinearLayout>
+        <!-- 햄버거 메뉴 버튼 -->
+        <ImageButton
+            android:id="@+id/btnHamburger"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="start"
+            android:src="@drawable/right"
+            android:background="@android:color/transparent"
+            android:contentDescription="메뉴 열기" />
+
+        <!-- 연도/월 선택 버튼 -->
+        <Button
+            android:id="@+id/btnPickMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#A5D6A7"
+            android:text="연도/월 선택"
+            android:textColor="#000000"
+            app:backgroundTint="@null" />
+
+        <!-- 바 차트 -->
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/barChart"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/rounded_background" />
+
+        <!-- 책 추천 버튼 -->
+        <Button
+            android:id="@+id/btnRecommendBooks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#000000"
+            android:background="#A5D6A7"
+            app:backgroundTint="@null"
+            android:text="책 추천 받기" />
+
+        <!-- 책 커버 스크롤 -->
+        <HorizontalScrollView
+            android:id="@+id/bookScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/bookCoverLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- 왼쪽 드로어 메뉴 -->
+    <LinearLayout
+        android:id="@+id/drawerMenu"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:orientation="vertical"
+        android:background="#DFF5D5"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/btnCalendar"
+            android:layout_width="375dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_button_v2"
+            android:text="홈"
+            android:textColor="#000000"
+            app:backgroundTint="@null" />
+
+        <Button
+            android:id="@+id/btnWriteDiary"
+            android:layout_width="375dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_button_v2"
+            android:text="일기 쓰기"
+            android:textColor="#000000"
+            app:backgroundTint="@null" />
+
+        <Button
+            android:id="@+id/btnList"
+            android:layout_width="376dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_button_v2"
+            android:text="일기 목록"
+            android:textColor="#000000"
+            app:backgroundTint="@null" />
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>
