@@ -26,9 +26,6 @@ object WeatherApiHelper {
     private const val SERVICE_KEY = "hwxoYncUf7iua1/vLy8ypCv2X5mcGvupImVHQVR+pEUu60aWdJi4+G94mBw8x99/O9AU5fUd41+HOXmv4YqQeA=="
     private const val BASE_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
 
-    /**
-     * 단기예보를 비동기로 조회하고, 결과 이모지를 반환
-     */
     suspend fun fetchWeatherEmoji(activity: AppCompatActivity): String {
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED

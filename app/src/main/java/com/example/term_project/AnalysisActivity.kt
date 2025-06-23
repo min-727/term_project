@@ -58,6 +58,7 @@ class AnalysisActivity : AppCompatActivity() {
         barChart = findViewById(R.id.barChart)
         btnRecommend = findViewById(R.id.btnRecommendBooks)
         bookCoverLayout = findViewById(R.id.bookCoverLayout)
+        btnPickMonth = findViewById(R.id.btnPickMonth)
         val btnCalendar = findViewById<Button>(R.id.btnCalendar)
         val btnDiary = findViewById<Button>(R.id.btnWriteDiary)
         val btnList = findViewById<Button>(R.id.btnList)
@@ -77,7 +78,7 @@ class AnalysisActivity : AppCompatActivity() {
         val now = Calendar.getInstance()
         val year = now.get(Calendar.YEAR)
         val month = now.get(Calendar.MONTH) + 1
-        val btnPickMonth = findViewById<Button>(R.id.btnPickMonth)
+
         btnPickMonth.text = "$year/$month"
         btnPickMonth.setOnClickListener {
             showYearMonthPickerDialog()
